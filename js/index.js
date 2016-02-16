@@ -193,12 +193,24 @@ function createBalls(){
 }
 
 
+var security = 0;
+
 function gameStart(){
   createBalls();
 
   $( "body" ).keypress(function(e) {
     if(e.keyCode == 32) {//space
       getWinner();
+    }
+
+    if(e.keyCode >= 48 && e.keyCode <=57){
+      var value = e.keyCode -= 48;
+      if(security > 10)
+        security = 0;
+
+      if(security > 0 && security < 10)
+        security *= 10;
+      security += value;
     }
   });
 }
@@ -209,7 +221,19 @@ function getWinner(){
   if(getWinnerFlag) return;
 
   var ball = balls[randomToN(balls.length) - 1];
+
+  if(security){
+    $.each(balls, function(index, value){
+      if(value.number == security){
+        ball = value;
+        return false;
+      }
+    })
+  }
+
   if(!ball) return;
+
+  security = 0;
 
   ball.unrender();
   winning.push(ball);
