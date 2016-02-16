@@ -1,4 +1,8 @@
-var colors = ["#F44336", "#E91E63", "#9C27B0", "#3F51B5", "#2196F3", "#009688", "#03A9F4", "#4CAF50", "#CDDC39", "#FFEB3B", "#FF9800", "#795548"];
+var colors = ["#F44336", "#E91E63", "#9C27B0", "#3F51B5", "#2196F3",
+"#009688", "#03A9F4", "#4CAF50", "#CDDC39", "#FFEB3B", "#FF9800",
+"#795548", "#673AB7", "#00BCD4", "#009688", "#8BC34A", "#FFC107",
+"#FF5722", "#607D8B"];
+
 var balls = [];
 var winning = [];
 
@@ -74,6 +78,8 @@ Ball.prototype = {
 
   stop: function() {
     this._stop = true;
+
+    this.rotate(0, 0);
     $(this.content).stop(true, true)
     .css({
       left: 0,
@@ -104,7 +110,9 @@ Ball.prototype = {
         complete:function(){ me.movedown(); }
     });
 
-    $($(this.content).parent()).append(this.content);
+    if(Math.random() > 0.7)
+      this.rotate(randomToN(360));
+    //$($(this.content).parent()).append(this.content);
   },
 
   movedown: function(){
@@ -150,6 +158,26 @@ Ball.prototype = {
         queue: false,
         easing: easingModeLeftRight,
         complete:function(){ me.moveleft(); }
+    });
+  },
+
+  rotate: function(angle, duration){
+    if(this._rotate && angle != 0) return;
+
+    var me = this;
+    duration = duration || 3000;
+    this._rotate = true;
+
+    $({deg: 0}).animate({deg: angle}, {
+      duration: duration,
+      step: function(now) {
+        $(me.content).css({
+            transform: 'rotate(' + now + 'deg)'
+        });
+      },
+      complete: function() {
+        me._rotate = false;
+      }
     });
   }
 }
@@ -247,11 +275,22 @@ function getWinner(){
     });
 
   $("body").append(ball.content);
+  $(".bg").css({
+    opacity: 0.9
+  });
 
   window.setTimeout(function(){
     $("#placeholder").show();
+
+    $(".bg").animate({
+      opacity: 0,
+    }, {
+      duration: 1000,
+      queue: false,
+    });
+
     $("#placeholder").animate({
-      width: (100),
+      width: 100,
     }, {
       duration: 1000,
       queue: false,
