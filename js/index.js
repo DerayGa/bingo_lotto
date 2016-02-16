@@ -198,6 +198,7 @@ var security = 0;
 function gameStart(){
   createBalls();
 
+  $("#placeholder").css({width: 0});
   $( "body" ).keypress(function(e) {
     if(e.keyCode == 32) {//space
       getWinner();
@@ -220,6 +221,7 @@ var getWinnerFlag = false;
 function getWinner(){
   if(getWinnerFlag) return;
 
+  getWinnerFlag = true;
   var ball = balls[randomToN(balls.length) - 1];
 
   if(security){
@@ -247,27 +249,39 @@ function getWinner(){
   $("body").append(ball.content);
 
   window.setTimeout(function(){
+    $("#placeholder").show();
+    $("#placeholder").animate({
+      width: (100),
+    }, {
+      duration: 1000,
+      queue: false,
+    });
+
     $(ball.content).animate({
       left: 0,
-      top: (lotto.height - 100),
+      top: Math.min($(".bingo").position().top, (lotto.height - 100)),
       width: 100,
       height: 100,
       fontSize: 60,
       lineHeight: 100,
       backgroundColor: '#F44336',
     },{
-        duration: 1000,
-        queue: false,
-        easing: 'easeOutSine',
-        complete:function(){
+      duration: 1000,
+      queue: false,
+      easing: 'easeOutSine',
+      complete:function(){
         $(ball.content).removeClass('superlarge')
         .css({
             left: 0,
             top: 0,
           });
+        $("#placeholder").css({width: 0});
         adjustSize(ball);
         ball.prepend($(".bingo"));
-        }
+        $("#placeholder").hide();
+        $(".bingo").prepend($("#placeholder"));
+        getWinnerFlag = false;
+      }
     });
   }, 1000);
   //
@@ -275,7 +289,4 @@ function getWinner(){
   balls = jQuery.grep(balls, function(value) {
     return value != ball;
   });
-
-
-  //getWinnerFlag = true;
 }

@@ -62,3 +62,7 @@ header {
 	font-size: 280px;
 	position: absolute;
 }
+
+div#placeholder{
+	height:20px;
+}
