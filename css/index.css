@@ -26,7 +26,7 @@ header {
 	float:right;
 	position: absolute;
 	bottom: 0px;
-	background-color: white;
+	background-color: #FFF9C4;
 	background-image: url("../image/bg.png")
 }
 
@@ -79,4 +79,7 @@ div#placeholder{
 	right: 0;
 	background-color: #9E9E9E;
 	opacity: 0;
+	background-image: url("../image/winner2.jpg");
+    background-size: 100% auto;
+    background-repeat: no-repeat;
 }

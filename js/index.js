@@ -276,7 +276,7 @@ function getWinner(){
 
   $("body").append(ball.content);
   $(".bg").css({
-    opacity: 0.9
+    opacity: 1
   });
 
   window.setTimeout(function(){
