@@ -201,6 +201,7 @@ function Ball(number, color, game){
   .html(number)
   .css( "background", "linear-gradient(to bottom right, " + 
     this.adjustColor(color, 25) + "," + this.adjustColor(color, -25) + ")");
+  //.css( "background", color);
 
   this._speed += (randomToN(10) / 100);
 
@@ -318,15 +319,15 @@ Ball.prototype = {
 
     $({deg: 0}).animate({deg: angle}, {
       duration: duration,
-      step: function(now) {
+      step: (function(now) {
         $(this.content).css({
             transform: 'rotate(' + now + 'deg)'
         });
-      },
-      complete: function() {
-        this._rotate = false;
-      }
-    }).bind(this);
+      }).bind(this),
+      complete: (function() {
+        me._rotate = false;
+      }).bind(this)
+    });
   }
 }
 
