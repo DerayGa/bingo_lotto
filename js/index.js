@@ -23,6 +23,8 @@ function Game(){
   });
   var myShakeEvent = new Shake();
   myShakeEvent.start();
+  window.addEventListener('shake', shakeEventDidOccur, false);
+
   function shakeEventDidOccur () {
     alert('shake!');
   }
