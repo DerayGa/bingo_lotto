@@ -42,6 +42,7 @@ Game.prototype = {
   "#009688", "#03A9F4", "#4CAF50", "#CDDC39", "#FFEB3B", "#FF9800",
   "#795548", "#673AB7", "#00BCD4", "#009688", "#8BC34A", "#FFC107",
   "#FF5722", "#607D8B"],
+  audio: new Audio('sound/6149.wav'),
   start: function(){
     this.adjustSize();
 
@@ -62,8 +63,8 @@ Game.prototype = {
 
     var size = 0;
     if(ball) {
-      var contains = Math.floor(this.lotto.dom.width() / ($(ball.content).width() + 10));
-      size = Math.ceil(this.winning.length / contains) * ( $(ball.content).height() + 2);
+      var contains = Math.floor(this.lotto.dom.width() / (ball.width + 10));
+      size = Math.ceil(this.winning.length / contains) * ( ball.height + 2);
     }
     this.bingo.dom.css({height: size});
 
@@ -93,6 +94,17 @@ Game.prototype = {
     if(!ball) return;
 
     this.security = 0;
+    this.audio.play();
+    this.audio.ontimeupdate = function() {
+      if(me.audio.currentTime >= 2.0) {
+        me.audio.ontimeupdate = null;
+        me.showWinner(ball);
+      }
+    };
+  },
+
+  showWinner: function(ball){
+    var me = this;
 
     ball.unrender();
     this.winning.push(ball);
@@ -125,6 +137,7 @@ Game.prototype = {
         queue: false,
       });
 
+      me.adjustSize({width: 100, height: 100});
       $(ball.content).animate({
         left: 0,
         top: Math.min($(".bingo").position().top, (me.lotto.height - 100)),
@@ -144,7 +157,6 @@ Game.prototype = {
               background: '#F44336',
             });
           $("#placeholder").css({width: 0});
-          me.adjustSize(ball);
           ball.prepend($(".bingo"));
           $("#placeholder").hide();
           $(".bingo").prepend($("#placeholder"));
