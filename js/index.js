@@ -21,6 +21,11 @@ function Game(){
       me.security += value;
     }
   });
+  var myShakeEvent = new Shake();
+  myShakeEvent.start();
+  function shakeEventDidOccur () {
+    alert('shake!');
+  }
 }
 Game.prototype = {
   security: 0,
