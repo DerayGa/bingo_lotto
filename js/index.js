@@ -26,7 +26,9 @@ function Game(){
   window.addEventListener('shake', shakeEventDidOccur, false);
 
   function shakeEventDidOccur () {
+    alert('la')
     me.getWinner();
+    alert('ga')
   }
 }
 Game.prototype = {
@@ -60,7 +62,7 @@ Game.prototype = {
       isMobile = true;
 
     if (isMobile)
-      amount = 30;
+      amount = 20;
 
     for(var i = 1 ; i <= amount ; i++){
       var ball = this.createBall(i);
