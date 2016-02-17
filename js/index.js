@@ -1,22 +1,173 @@
-var colors = ["#F44336", "#E91E63", "#9C27B0", "#3F51B5", "#2196F3",
-"#009688", "#03A9F4", "#4CAF50", "#CDDC39", "#FFEB3B", "#FF9800",
-"#795548", "#673AB7", "#00BCD4", "#009688", "#8BC34A", "#FFC107",
-"#FF5722", "#607D8B"];
 
-var balls = [];
-var winning = [];
+function Game(){
+  this.lotto.dom = $(".lotto");
+  this.bingo.dom = $(".bingo");
+  var me = this;
 
-var lotto = {
-  width: 0,
-  height: 0,
+  $("#placeholder").css({width: 0});
+  $("body").keypress(function(e) {
+    if(e.keyCode == 32) {//space
+      me.getWinner();
+    }
+
+    if(e.keyCode >= 48 && e.keyCode <=57){
+      var value = e.keyCode -= 48;
+      if(me.security > 10)
+        me.security = 0;
+
+      if(me.security > 0 && me.security < 10)
+        me.security *= 10;
+
+      me.security += value;
+    }
+  });
 }
+Game.prototype = {
+  security: 0,
 
-function Ball(number, color){
+  balls: [],
+  winning: [],
+
+  lotto: {
+    dom: null,
+    width: 0,
+    height: 0,
+  },
+
+  bingo: {
+    dom: null,
+  },
+
+  colors: ["#F44336", "#E91E63", "#9C27B0", "#3F51B5", "#2196F3",
+  "#009688", "#03A9F4", "#4CAF50", "#CDDC39", "#FFEB3B", "#FF9800",
+  "#795548", "#673AB7", "#00BCD4", "#009688", "#8BC34A", "#FFC107",
+  "#FF5722", "#607D8B"],
+  start: function(){
+    this.adjustSize();
+
+    for(var i = 1 ; i <= 75 ; i++){
+      var ball = this.createBall(i);
+      this.balls.push(ball);
+      ball.render(this.lotto.dom);
+
+      ball.movedown();
+    }
+  },
+
+  createBall: function(number){
+    return new Ball(number, this.colors[number % this.colors.length], this);
+  },
+
+  adjustSize: function(ball){
+
+    var size = 0;
+    if(ball) {
+      var contains = Math.floor(this.lotto.dom.width() / ($(ball.content).width() + 10));
+      size = Math.ceil(this.winning.length / contains) * ( $(ball.content).height() + 2);
+    }
+    this.bingo.dom.css({height: size});
+
+    this.lotto.width = this.lotto.dom.width();
+    this.lotto.height = this.lotto.dom.height();
+
+  },
+
+  _getWinnerFlag: false,
+
+  getWinner: function(){
+    if(this._getWinnerFlag) return;
+
+    this._getWinnerFlag = true;
+    var ball = this.balls[randomToN(this.balls.length) - 1];
+
+    var me = this;
+    if(this.security){
+      $.each(this.balls, function(index, value){
+        if(value.number == me.security){
+          ball = value;
+          return false;
+        }
+      });
+    }
+
+    if(!ball) return;
+
+    this.security = 0;
+
+    ball.unrender();
+    this.winning.push(ball);
+
+    $(ball.content).addClass('superlarge')
+    .css({
+        left: (this.lotto.width - $(ball.content).width()) / 2,
+        top: (this.lotto.height - $(ball.content).height()) / 2,
+      });
+
+    $("body").append(ball.content);
+    $(".bg").css({
+      opacity: 1
+    });
+
+    window.setTimeout(function(){
+      $("#placeholder").show();
+
+      $(".bg").animate({
+        opacity: 0,
+      }, {
+        duration: 1000,
+        queue: false,
+      });
+
+      $("#placeholder").animate({
+        width: 100,
+      }, {
+        duration: 1000,
+        queue: false,
+      });
+
+      $(ball.content).animate({
+        left: 0,
+        top: Math.min($(".bingo").position().top, (me.lotto.height - 100)),
+        width: 100,
+        height: 100,
+        fontSize: 60,
+        lineHeight: 100,
+      },{
+        duration: 1000,
+        queue: false,
+        easing: 'easeOutSine',
+        complete:function(){
+          $(ball.content).removeClass('superlarge')
+          .css({
+              left: 0,
+              top: 0,
+              background: '#F44336',
+            });
+          $("#placeholder").css({width: 0});
+          me.adjustSize(ball);
+          ball.prepend($(".bingo"));
+          $("#placeholder").hide();
+          $(".bingo").prepend($("#placeholder"));
+          me._getWinnerFlag = false;
+        }
+      });
+    }, 1000);
+
+    this.balls = jQuery.grep(this.balls, function(value) {
+      return value != ball;
+    });
+  }
+}
+//-----------------------------------------
+function Ball(number, color, game){
+  this.game = game;
+
   this.content = document.createElement("div");
   this.number = number;
   $(this.content).addClass("ball")
   .html(number)
-  .css( "background-color", color);
+  .css( "background", "linear-gradient(to bottom right, " + 
+    this.adjustColor(color, 25) + "," + this.adjustColor(color, -25) + ")");
 
   this._speed += (randomToN(10) / 100);
 
@@ -29,12 +180,13 @@ Ball.prototype = {
   _speed: 0.5,
   easingModeUp: 'easeOutSine',
   easingModeDown: 'easeInSine',
+  game: null,
   render: function(parent){
     $(parent).append(this.content);
 
     $(this.content).css({
-      top: randomToN(lotto.height - this.height()),
-      left: randomToN(lotto.width - this.width())
+      top: randomToN(this.game.lotto.height - this.height()),
+      left: randomToN(this.game.lotto.width - this.width())
     });
   },
 
@@ -45,6 +197,11 @@ Ball.prototype = {
   unrender: function(){
     this.stop();
     //$(this.content).remove();
+  },
+
+  adjustColor: function(color, percent) {
+      var num = parseInt(color.slice(1),16), amt = Math.round(2.55 * percent), R = (num >> 16) + amt, G = (num >> 8 & 0x00FF) + amt, B = (num & 0x0000FF) + amt;
+      return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
   },
 
   height: function(){
@@ -84,7 +241,7 @@ Ball.prototype = {
     if(this._stop) return;
 
     this._diff = randomToN(200) * ((Math.random() > 0.5) ? 1 : -1);
-    if(this.left() + (this._diff * 2) > (lotto.width - this.width()))
+    if(this.left() + (this._diff * 2) > (this.game.lotto.width - this.width()))
       this._diff *= -1;
     if(this.left() + (this._diff * 2) < 0)
       this._diff *= -1;
@@ -108,7 +265,7 @@ Ball.prototype = {
   movedown: function(){
     if(this._stop) return;
 
-    var range = lotto.height - this.height() - $(this.content).position().top;
+    var range = this.game.lotto.height - this.height() - $(this.content).position().top;
     $(this.content).animate({
       top: '+=' + range,
       left: '+=' + this._diff
@@ -118,10 +275,6 @@ Ball.prototype = {
         easing: this.easingModeDown,
         complete:(function(){ this.moveup(); }).bind(this)
     });
-  },
-
-  bounce: function(){
-    this.movedown();
   },
 
   rotate: function(angle, duration){
@@ -144,150 +297,8 @@ Ball.prototype = {
   }
 }
 
+//-----------------------------------------
+
 function randomToN(n){
   return Math.floor((Math.random() * n) + 1);
-}
-
-function createBall(number){
-  var color = colors[number % colors.length];
-
-  var ball = new Ball(number, color);
-
-  return ball;
-}
-
-function adjustSize(ball){
-
-  var size = 0;
-  if(ball) {
-    var contains = Math.floor($(".lotto").width() / ($(ball.content).width() + 10));
-    size = Math.ceil(winning.length / contains) * ( $(ball.content).height() + 2);
-  }
-  $(".bingo").css({height: size});
-
-  lotto.width = $(".lotto").width();
-  lotto.height = $(".lotto").height();
-
-}
-
-function createBalls(){
-  adjustSize();
-
-  for(var i = 1 ; i <= 75 ; i++){
-    var ball = createBall(i);
-    balls.push(ball);
-    ball.render($(".lotto"));
-
-    ball.bounce();
-  }
-}
-
-
-var security = 0;
-
-function gameStart(){
-  createBalls();
-
-  $("#placeholder").css({width: 0});
-  $( "body" ).keypress(function(e) {
-    if(e.keyCode == 32) {//space
-      getWinner();
-    }
-
-    if(e.keyCode >= 48 && e.keyCode <=57){
-      var value = e.keyCode -= 48;
-      if(security > 10)
-        security = 0;
-
-      if(security > 0 && security < 10)
-        security *= 10;
-      security += value;
-    }
-  });
-}
-
-var getWinnerFlag = false;
-
-function getWinner(){
-  if(getWinnerFlag) return;
-
-  getWinnerFlag = true;
-  var ball = balls[randomToN(balls.length) - 1];
-
-  if(security){
-    $.each(balls, function(index, value){
-      if(value.number == security){
-        ball = value;
-        return false;
-      }
-    })
-  }
-
-  if(!ball) return;
-
-  security = 0;
-
-  ball.unrender();
-  winning.push(ball);
-
-  $(ball.content).addClass('superlarge')
-  .css({
-      left: (lotto.width - $(ball.content).width()) / 2,
-      top: (lotto.height - $(ball.content).height()) / 2,
-    });
-
-  $("body").append(ball.content);
-  $(".bg").css({
-    opacity: 1
-  });
-
-  window.setTimeout(function(){
-    $("#placeholder").show();
-
-    $(".bg").animate({
-      opacity: 0,
-    }, {
-      duration: 1000,
-      queue: false,
-    });
-
-    $("#placeholder").animate({
-      width: 100,
-    }, {
-      duration: 1000,
-      queue: false,
-    });
-
-    $(ball.content).animate({
-      left: 0,
-      top: Math.min($(".bingo").position().top, (lotto.height - 100)),
-      width: 100,
-      height: 100,
-      fontSize: 60,
-      lineHeight: 100,
-      backgroundColor: '#F44336',
-    },{
-      duration: 1000,
-      queue: false,
-      easing: 'easeOutSine',
-      complete:function(){
-        $(ball.content).removeClass('superlarge')
-        .css({
-            left: 0,
-            top: 0,
-          });
-        $("#placeholder").css({width: 0});
-        adjustSize(ball);
-        ball.prepend($(".bingo"));
-        $("#placeholder").hide();
-        $(".bingo").prepend($("#placeholder"));
-        getWinnerFlag = false;
-      }
-    });
-  }, 1000);
-  //
-
-  balls = jQuery.grep(balls, function(value) {
-    return value != ball;
-  });
 }

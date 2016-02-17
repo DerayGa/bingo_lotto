@@ -42,12 +42,12 @@ header {
 	font-weight: bolder;
 	border-radius: 40px;
 	position: absolute;
+	box-shadow: 6px 6px 8px #333;
 }
 .ball.selected{
 	margin: 1px 5px;
 	position: relative;
 	display: inline-block;
-	box-shadow: 5px 5px 3px #333;
 }
 
 .ball.large{
@@ -65,6 +65,7 @@ header {
 	border-radius: 250px;
 	font-size: 280px;
 	position: absolute;
+	box-shadow: 16px 16px 18px #333;
 }
 
 div#placeholder{
