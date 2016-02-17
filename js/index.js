@@ -11,11 +11,6 @@ var lotto = {
   height: 0,
 }
 
-var easingModeUp = 'easeOutSine';
-var easingModeDown = 'easeInSine';
-var easingModeLeftRight = 'easeInCirc';
-var speedPerPixel = 0.5;
-
 function Ball(number, color){
   this.content = document.createElement("div");
   this.number = number;
@@ -31,7 +26,9 @@ function Ball(number, color){
 Ball.prototype = {
   _height: null,
   _width: null,
-  _speed: speedPerPixel,
+  _speed: 0.5,
+  easingModeUp: 'easeOutSine',
+  easingModeDown: 'easeInSine',
   render: function(parent){
     $(parent).append(this.content);
 
@@ -70,12 +67,6 @@ Ball.prototype = {
     return $(this.content).position().left;
   },
 
-  run: function() {
-    this.movedown();
-    //(Math.random() > 0.5) ? this.moveup() : this.movedown();
-    //(Math.random() > 0.5) ? this.moveright(): this.moveleft();
-  },
-
   stop: function() {
     this._stop = true;
 
@@ -98,7 +89,6 @@ Ball.prototype = {
     if(this.left() + (this._diff * 2) < 0)
       this._diff *= -1;
 
-    var me = this;
     var range = $(this.content).position().top -= randomToN(150);
     $(this.content).animate({
       top: '-=' + range,
@@ -106,19 +96,18 @@ Ball.prototype = {
     },{
         duration: range/this._speed,
         queue: false,
-        easing: easingModeUp,
-        complete:function(){ me.movedown(); }
+        easing: this.easingModeUp,
+        complete:(function(){ this.movedown(); }).bind(this)
     });
 
     if(Math.random() > 0.7)
       this.rotate(randomToN(360));
-    //$($(this.content).parent()).append(this.content);
+    $($(this.content).parent()).append(this.content);
   },
 
   movedown: function(){
     if(this._stop) return;
 
-    var me = this;
     var range = lotto.height - this.height() - $(this.content).position().top;
     $(this.content).animate({
       top: '+=' + range,
@@ -126,59 +115,32 @@ Ball.prototype = {
     },{
         duration: range/this._speed,
         queue: false,
-        easing: easingModeDown,
-        complete:function(){ me.moveup(); }
+        easing: this.easingModeDown,
+        complete:(function(){ this.moveup(); }).bind(this)
     });
   },
 
-  moveleft: function(){
-    if(this._stop) return;
-
-    var me = this;
-    var range = lotto.width - this.width() - $(this.content).position().left;
-    $(this.content).animate({
-      left: '+=' + range
-    },{
-        duration: range/this._speed,
-        queue: false,
-        easing: easingModeLeftRight,
-        complete:function(){ me.moveright(); }
-      });
-  },
-
-  moveright: function(){
-    if(this._stop) return;
-
-    var me = this;
-    var range = $(this.content).position().left;
-    $(this.content).animate({
-      left: '-=' + range
-    },{
-        duration: range/this._speed,
-        queue: false,
-        easing: easingModeLeftRight,
-        complete:function(){ me.moveleft(); }
-    });
+  bounce: function(){
+    this.movedown();
   },
 
   rotate: function(angle, duration){
     if(this._rotate && angle != 0) return;
 
-    var me = this;
     duration = duration || 3000;
     this._rotate = true;
 
     $({deg: 0}).animate({deg: angle}, {
       duration: duration,
       step: function(now) {
-        $(me.content).css({
+        $(this.content).css({
             transform: 'rotate(' + now + 'deg)'
         });
       },
       complete: function() {
-        me._rotate = false;
+        this._rotate = false;
       }
-    });
+    }).bind(this);
   }
 }
 
@@ -216,7 +178,7 @@ function createBalls(){
     balls.push(ball);
     ball.render($(".lotto"));
 
-    ball.run();
+    ball.bounce();
   }
 }
 
