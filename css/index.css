@@ -82,6 +82,6 @@ div#placeholder{
 	background-color: #9E9E9E;
 	opacity: 0;
 	background-image: url("../image/winner2.jpg");
-    background-size: 100% auto;
+    background-size: 100% 100%;
     background-repeat: no-repeat;
 }
