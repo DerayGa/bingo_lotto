@@ -1,8 +1,15 @@
 
-function Game(){
+function Game(number, sound){
   this.lotto.dom = $(".lotto");
   this.bingo.dom = $(".bingo");
   var me = this;
+
+  if (number != undefined) {
+    this.number = number
+  }
+  if (sound != undefined) {
+    this.sound = sound
+  }
 
   $("#placeholder").css({width: 0});
   $("body").keypress(function(e) {
@@ -12,18 +19,20 @@ function Game(){
 
     if(e.keyCode >= 48 && e.keyCode <=57){
       var value = e.keyCode -= 48;
-      if(me.security > 10)
-        me.security = 0;
+      if(me.secret > 10)
+        me.secret = 0;
 
-      if(me.security > 0 && me.security < 10)
-        me.security *= 10;
+      if(me.secret > 0 && me.secret < 10)
+        me.secret *= 10;
 
-      me.security += value;
+      me.secret += value;
     }
   });
 }
 Game.prototype = {
-  security: 0,
+  secret: 0,
+  number: 75,
+  sound: true,
 
   balls: [],
   winning: [],
@@ -46,7 +55,7 @@ Game.prototype = {
   start: function(){
     this.adjustSize();
 
-    for(var i = 1 ; i <= 75 ; i++){
+    for(var i = 1 ; i <= this.number ; i++){
       var ball = this.createBall(i);
       this.balls.push(ball);
       ball.render(this.lotto.dom);
@@ -82,9 +91,9 @@ Game.prototype = {
     var ball = this.balls[randomToN(this.balls.length) - 1];
 
     var me = this;
-    if(this.security){
+    if(this.secret){
       $.each(this.balls, function(index, value){
-        if(value.number == me.security){
+        if(value.number == me.secret){
           ball = value;
           return false;
         }
@@ -93,14 +102,18 @@ Game.prototype = {
 
     if(!ball) return;
 
-    this.security = 0;
-    this.audio.play();
-    this.audio.ontimeupdate = function() {
-      if(me.audio.currentTime >= 2.0) {
-        me.audio.ontimeupdate = null;
-        me.showWinner(ball);
-      }
-    };
+    this.secret = 0;
+    if (this.sound) {
+      this.audio.play();
+      this.audio.ontimeupdate = function() {
+        if(me.audio.currentTime >= 2.0) {
+          me.audio.ontimeupdate = null;
+          me.showWinner(ball);
+        }
+      };
+    } else {
+      me.showWinner(ball);
+    }
   },
 
   showWinner: function(ball){

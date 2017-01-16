@@ -18,8 +18,26 @@
     <div class="bg"></div>
   </body>
   <script>
+    var getUrlParameter = function getUrlParameter(sParam) {
+      var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName;
+
+      for (var i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+          return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+      }
+    };
+
     $().ready(function(){
-      new Game().start();
+      var number = getUrlParameter('n');
+      var sound = getUrlParameter('s');
+
+      new Game((number === undefined) ? undefined : Number(number),
+      (sound === undefined) ? undefined : (sound === 'true')).start();
     });
   </script>
 </html>
